@@ -240,3 +240,6 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/src/Depthcharge.Queue/appsetting.dev.json
+/src/Depthcharge.Queue/appsettings.dev.json
+/src/Depthcharge.Queue/appsettings.Development.json

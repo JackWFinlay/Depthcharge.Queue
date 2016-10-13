@@ -38,6 +38,8 @@ namespace Depthcharge.Queue
             services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddMvc();
+
+            services.Configure<DocumentDBSettings>(Configuration.GetSection("DocumentDBSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
