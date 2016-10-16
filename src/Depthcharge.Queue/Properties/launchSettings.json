@@ -18,7 +18,7 @@
     },
     "Depthcharge.Queue": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "http://localhost:5001/api/values",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

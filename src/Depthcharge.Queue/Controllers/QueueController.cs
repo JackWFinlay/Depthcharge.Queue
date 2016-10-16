@@ -21,8 +21,15 @@ namespace Depthcharge.Queue.Controllers
 
         public QueueController(IOptions<DocumentDbSettings> dbSettings)
         {
-            _dbSettings = dbSettings;
-            _documentDbClient = new DocumentDbClient(dbSettings);
+            if (_dbSettings == null)
+            {
+                _dbSettings = dbSettings;
+            }
+
+            if (_documentDbClient == null)
+            {
+                _documentDbClient = new DocumentDbClient(dbSettings);
+            }
         }
 
         // GET: /<controller>/
@@ -44,7 +51,7 @@ namespace Depthcharge.Queue.Controllers
         }
 
         [HttpPatch]
-        public async void Patch(QueueItem queueItem)
+        public async void Patch([FromBody]QueueItem queueItem)
         {
             await _documentDbClient.MarkAsIndexed(queueItem);
         }

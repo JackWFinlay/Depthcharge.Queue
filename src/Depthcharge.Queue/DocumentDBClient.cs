@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.Text;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Depthcharge.Queue
 {
@@ -142,7 +143,13 @@ namespace Depthcharge.Queue
                 .AsEnumerable() //have to make Enumerable first due to only collections being selectable at this point in the DocumentDB libraries.
                 .FirstOrDefault();
 
-            return (queueItem != null) ? $"{queueItem.Protocol}://{queueItem.Url}" : null;
+            string json = "";
+            if (queueItem != null)
+            {
+                json = JsonConvert.SerializeObject(queueItem);
+            }
+
+            return (queueItem != null) ? json : null;
         }
 
 
