@@ -19,7 +19,7 @@ namespace Depthcharge.Queue.Controllers
         private static IOptions<DocumentDbSettings> _dbSettings;
         private static DocumentDbClient _documentDbClient;
 
-        public QueueController(IOptions<DocumentDbSettings> dbSettings)
+        public QueueController([FromServices]IOptions<DocumentDbSettings> dbSettings)
         {
             if (_dbSettings == null)
             {

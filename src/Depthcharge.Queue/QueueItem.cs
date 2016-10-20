@@ -19,5 +19,8 @@ namespace Depthcharge.Queue
 
         [JsonProperty(PropertyName = "indexed")]
         public bool Indexed { get; set; }
+
+        [JsonProperty(PropertyName = "requested")]
+        public bool Requested { get; set; }
     }
 }

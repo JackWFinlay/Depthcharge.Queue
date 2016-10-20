@@ -27,7 +27,8 @@ namespace Depthcharge.Queue
         public DocumentDbClient([FromServices] IOptions<DocumentDbSettings> appSettings)
         {
             DocumentDbSettings documentDbSettings = appSettings.Value;
-            _documentClient = new DocumentClient(new Uri(documentDbSettings.DocumentDBConnectionString), documentDbSettings.DocumentDBPrimaryKey);
+            _documentClient = new DocumentClient(new Uri(documentDbSettings.DocumentDBConnectionString),
+                documentDbSettings.DocumentDBPrimaryKey);
             SetupAsync().Wait();
         }
 
@@ -51,7 +52,7 @@ namespace Depthcharge.Queue
                 // If the database does not exist, create a new database
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
-                    await _documentClient.CreateDatabaseAsync(new Database { Id = databaseName });
+                    await _documentClient.CreateDatabaseAsync(new Database {Id = databaseName});
                 }
                 else
                 {
@@ -64,7 +65,9 @@ namespace Depthcharge.Queue
         {
             try
             {
-                await _documentClient.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName));
+                await
+                    _documentClient.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName,
+                        collectionName));
             }
             catch (DocumentClientException de)
             {
@@ -74,7 +77,11 @@ namespace Depthcharge.Queue
                     DocumentCollection collectionInfo = new DocumentCollection
                     {
                         Id = collectionName,
-                        IndexingPolicy = new IndexingPolicy(new RangeIndex(Microsoft.Azure.Documents.DataType.String) { Precision = -1 })
+                        IndexingPolicy =
+                            new IndexingPolicy(new RangeIndex(Microsoft.Azure.Documents.DataType.String)
+                            {
+                                Precision = -1
+                            })
                     };
 
                     // Configure collections for maximum query flexibility including string range queries.
@@ -113,7 +120,8 @@ namespace Depthcharge.Queue
 
         public async Task CreateQueueDocumentIfNotExistsAsync(QueueItem queueItemToInsert)
         {
-            string query = $"Select * FROM {QueueCollectionName} q WHERE q.url = '{ProtocolUrlSplit(queueItemToInsert.Url)}'";
+            string query =
+                $"Select * FROM {QueueCollectionName} q WHERE q.url = '{ProtocolUrlSplit(queueItemToInsert.Url)}'";
 
             Document queueItem = _documentClient.CreateDocumentQuery(_indexQueueCollectionLink, query)
                 .AsEnumerable()
@@ -127,9 +135,9 @@ namespace Depthcharge.Queue
             }
             else
             {
-                queueItem.SetPropertyValue("priority", (queueItem.GetPropertyValue<int>("priority") + 1 ));
+                queueItem.SetPropertyValue("priority", (queueItem.GetPropertyValue<int>("priority") + 1));
                 //queueItem.Priority = ++queueItem.Priority;
-                
+
                 await _documentClient.ReplaceDocumentAsync(queueItem);
             }
         }
@@ -137,19 +145,32 @@ namespace Depthcharge.Queue
         public string GetHighestPriorityTask()
         {
             QueueItem queueItem = _documentClient.CreateDocumentQuery<QueueItem>(_indexQueueCollectionLink)
-                .AsEnumerable()
-                .Where(x => x.Indexed == false)
+                .Where(x => x.Requested == false && x.Indexed == false)
                 .OrderByDescending(x => x.Priority)
-                .AsEnumerable() //have to make Enumerable first due to only collections being selectable at this point in the DocumentDB libraries.
+                .AsEnumerable()
+                //have to make Enumerable first due to only collections being selectable at this point in the DocumentDB libraries.
                 .FirstOrDefault();
 
             string json = "";
             if (queueItem != null)
             {
                 json = JsonConvert.SerializeObject(queueItem);
+                MarkAsRequested(queueItem).Wait();
             }
 
+            
             return (queueItem != null) ? json : null;
+        }
+
+        public async Task MarkAsRequested(QueueItem queueItemToUpdate)
+        {
+            string query = $"Select * FROM {QueueCollectionName} q WHERE q.url = '{ProtocolUrlSplit(queueItemToUpdate.Url)}'";
+            Document queueItem = _documentClient.CreateDocumentQuery(_indexQueueCollectionLink, query)
+                .AsEnumerable()
+                .FirstOrDefault();
+
+            queueItem.SetPropertyValue("requested", true);
+            await _documentClient.ReplaceDocumentAsync(queueItem);
         }
 
 
